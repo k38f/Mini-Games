@@ -1,11 +1,5 @@
 # Mini-Games
 
-## Screenshots
-
-![Menu](screenshots/1.png)
-![Snake](screenshots/2.png)
-![Gomoku](screenshots/3.png)
-
 # Mini Games Collection 🎮
 
 A small collection of classic games in one window, built with **Python + Pygame**.
@@ -21,6 +15,13 @@ A small collection of classic games in one window, built with **Python + Pygame*
 ![Pygame](https://img.shields.io/badge/Pygame-2.x-green)
 
 ---
+
+## Screenshots
+
+![Menu](screenshots/1.png)
+![Snake](screenshots/2.png)
+![Gomoku](screenshots/3.png)
+
 
 ## Requirements
 
