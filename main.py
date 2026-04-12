@@ -38,7 +38,7 @@ import game_snake
 #  VERSION
 # ==============================================================================
 
-CURRENT_VERSION = "1.0.0"   # keep in sync with the GitHub release tag (no 'v')
+CURRENT_VERSION = "1.1.0"   # keep in sync with the GitHub release tag (no 'v')
 
 GITHUB_API    = "https://api.github.com/repos/k38f/Mini-Games/releases/latest"
 RELEASES_PAGE = "https://github.com/k38f/Mini-Games/releases/latest"
