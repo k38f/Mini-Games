@@ -1,15 +1,12 @@
 """
-shared.py
-=========
-Colours, fonts, and small helper functions used by every game module.
-Import everything with:  from shared import *
+shared.py — colours, fonts, helpers used by every game module.
 """
 
 import pygame
 
-# ==============================================================================
-#  WINDOW / CLOCK  (created once here, reused everywhere)
-# ==============================================================================
+# -------------------------------------------------------
+#  window / clock
+# -------------------------------------------------------
 
 pygame.init()
 
@@ -19,9 +16,9 @@ pygame.display.set_caption("Mini Games Collection")
 clock = pygame.time.Clock()
 FPS   = 60
 
-# ==============================================================================
-#  COLOUR PALETTE
-# ==============================================================================
+# -------------------------------------------------------
+#  colour palette
+# -------------------------------------------------------
 
 BG         = ( 15,  15,  25)
 PANEL      = ( 28,  28,  45)
@@ -44,9 +41,9 @@ GOMOKU_BG  = ( 22,  20,  14)
 GOMOKU_LN  = ( 80,  70,  50)
 WIN_GLOW   = (255, 220,  60)
 
-# ==============================================================================
-#  FONTS
-# ==============================================================================
+# -------------------------------------------------------
+#  fonts
+# -------------------------------------------------------
 
 def _font(size, bold=False):
     for name in ("Segoe UI", "Arial", "DejaVu Sans"):
@@ -62,30 +59,26 @@ f_med   = _font(26)
 f_small = _font(20)
 f_tiny  = _font(15)
 
-# ==============================================================================
-#  SHARED DRAW HELPERS
-# ==============================================================================
+# -------------------------------------------------------
+#  draw helpers
+# -------------------------------------------------------
 
 def draw_text(surf, text, font, color, cx, cy):
-    """Render text centred at (cx, cy)."""
     s = font.render(text, True, color)
     surf.blit(s, s.get_rect(center=(cx, cy)))
 
 
 def draw_button(surf, label, rect, hover=False, col=None):
-    """Filled rounded-rect button. col overrides the default accent colour."""
     c = col if col else (ACCENT_H if hover else ACCENT)
     pygame.draw.rect(surf, c, rect, border_radius=10)
     draw_text(surf, label, f_med, TEXT, rect.centerx, rect.centery)
 
 
 def mouse_over(rect):
-    """Return True if the mouse is inside rect."""
     return rect.collidepoint(pygame.mouse.get_pos())
 
 
 def back_btn_rect():
-    """Standard Back button in the top-left corner."""
     return pygame.Rect(12, 12, 88, 34)
 
 
@@ -95,6 +88,8 @@ def mode_select(title):
     Returns ("pvp", None) or ("ai", "easy"/"medium"/"hard").
     Returns None if the player pressed Back.
     """
+    import sys
+
     options = [
         ("2 Players",      ("pvp",  None)),
         ("vs AI  Easy",    ("ai", "easy")),
@@ -121,8 +116,7 @@ def mode_select(title):
 
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
-                pygame.quit()
-                import sys; sys.exit()
+                pygame.quit(); sys.exit()
             if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                 if back.collidepoint(e.pos):
                     return None

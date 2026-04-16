@@ -1,9 +1,6 @@
 """
-game_gomoku.py
-==============
-Game 2 — Gomoku (5 in a row).
-Scrollable 60×60 board. Two players or vs AI (easy / medium / hard).
-Winning cells are highlighted with a pulsing gold glow.
+game_gomoku.py — Gomoku (5 in a row) on a scrollable 60×60 board.
+Two players or vs AI.
 """
 
 import pygame
@@ -18,28 +15,27 @@ from shared import (
     draw_text, draw_button, mouse_over, back_btn_rect, mode_select,
 )
 
-# ==============================================================================
-#  AI HELPERS
-# ==============================================================================
+BOARD_SIZE = 60
 
-def _candidates(board, rows, cols, radius=2):
-    """Return empty cells within `radius` steps of any placed stone."""
+
+def _candidates(board, radius=2):
+    """Empty cells within `radius` steps of any placed stone."""
     if not board:
-        return [(rows // 2, cols // 2)]
+        return [(BOARD_SIZE // 2, BOARD_SIZE // 2)]
     seen = set()
     for (br, bc) in board:
         for dr in range(-radius, radius + 1):
             for dc in range(-radius, radius + 1):
                 nr, nc = br + dr, bc + dc
-                if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in board:
+                if 0 <= nr < BOARD_SIZE and 0 <= nc < BOARD_SIZE and (nr, nc) not in board:
                     seen.add((nr, nc))
-    return list(seen) or [(rows // 2, cols // 2)]
+    return list(seen) or [(BOARD_SIZE // 2, BOARD_SIZE // 2)]
 
 
 def _score_dir(board, row, col, dr, dc, player):
     """
-    Score the line through (row,col) in direction ±(dr,dc) for `player`.
-    Counts consecutive stones and open ends to estimate line strength.
+    Score the line through (row,col) in direction ±(dr,dc).
+    Counts consecutive stones and open/blocked ends.
     """
     count, open_ends = 1, 0
     for sign in (1, -1):
@@ -48,24 +44,25 @@ def _score_dir(board, row, col, dr, dc, player):
             count += 1
             r += dr * sign
             c += dc * sign
-        if (r, c) not in board:
+        # only count as open if the cell is in-bounds AND empty
+        if (0 <= r < BOARD_SIZE and 0 <= c < BOARD_SIZE
+                and (r, c) not in board):
             open_ends += 1
 
     if count >= 5: return 200_000
     if count == 4:
-        if open_ends == 2: return  80_000
+        if open_ends == 2: return  78_000
         if open_ends == 1: return   2_500
     if count == 3:
-        if open_ends == 2: return   6_000
-        if open_ends == 1: return     350
+        if open_ends == 2: return   5_800
+        if open_ends == 1: return     320
     if count == 2:
-        if open_ends == 2: return     200
-        if open_ends == 1: return      25
+        if open_ends == 2: return     180
+        if open_ends == 1: return      20
     return 2
 
 
 def _eval_cell(board, row, col, player):
-    """Total heuristic score for placing `player`'s stone at (row, col)."""
     board[(row, col)] = player
     score = sum(_score_dir(board, row, col, dr, dc, player)
                 for dr, dc in [(0,1), (1,0), (1,1), (1,-1)])
@@ -74,10 +71,6 @@ def _eval_cell(board, row, col, player):
 
 
 def _find_five(board, row, col, player):
-    """
-    After placing at (row, col), return a list of 5 cells that form a winning
-    line, or None if no 5-in-a-row was made.
-    """
     for dr, dc in [(0,1), (1,0), (1,1), (1,-1)]:
         line = [(row, col)]
         for sign in (1, -1):
@@ -91,35 +84,30 @@ def _find_five(board, row, col, player):
     return None
 
 
-def _ai_move(board, ai, human, difficulty, rows, cols):
-    """Return (row, col) for the AI's next stone."""
-    candidates = _candidates(board, rows, cols,
-                             radius=1 if difficulty == "easy" else 2)
+def _ai_move(board, ai, human, difficulty):
+    candidates = _candidates(board, radius=1 if difficulty == "easy" else 2)
     candidates = [(r, c) for r, c in candidates if (r, c) not in board]
     if not candidates:
-        return (rows // 2, cols // 2)
+        return (BOARD_SIZE // 2, BOARD_SIZE // 2)
 
     if difficulty == "easy":
         return random.choice(candidates)
 
     best_score, best_move = -1, candidates[0]
     for r, c in candidates:
-        ai_score  = _eval_cell(board, r, c, ai)
-        opp_score = _eval_cell(board, r, c, human)
-        defense   = 1.25 if difficulty == "hard" else 0.95
-        total     = ai_score + opp_score * defense
+        att = _eval_cell(board, r, c, ai)
+        opp = _eval_cell(board, r, c, human)
+        # defense = 1.15
+        defense = 1.25 if difficulty == "hard" else 0.95
+        total   = att + opp * defense
         if total > best_score:
             best_score, best_move = total, (r, c)
     return best_move
 
 
-# ==============================================================================
-#  MAIN GAME FUNCTION
-# ==============================================================================
+# ---------------------------------------------------------
 
 def run():
-    """Entry point — called from main.py."""
-
     mode = mode_select("Gomoku  (5 in a row)")
     if mode is None:
         return
@@ -130,25 +118,22 @@ def run():
     hu_symbol = "X"
 
     CELL      = 38
-    COLS      = 60
-    ROWS      = 60
     TOP_BAR   = 54
     view_cols = W // CELL
     view_rows = (H - TOP_BAR) // CELL
 
-    # Camera starts centred on the board
-    cam_x = COLS // 2 - view_cols // 2
-    cam_y = ROWS // 2 - view_rows // 2
+    cam_x = BOARD_SIZE // 2 - view_cols // 2
+    cam_y = BOARD_SIZE // 2 - view_rows // 2
 
     def clamp_cam():
         nonlocal cam_x, cam_y
-        cam_x = max(0, min(cam_x, COLS - view_cols))
-        cam_y = max(0, min(cam_y, ROWS - view_rows))
+        cam_x = max(0, min(cam_x, BOARD_SIZE - view_cols))
+        cam_y = max(0, min(cam_y, BOARD_SIZE - view_rows))
 
     board       = {}
     current     = "X"
     winner      = None
-    win_cells   = None   # the 5 cells that completed the winning line
+    win_cells   = None
     ai_timer    = 0
     ai_thinking = False
     btn_back    = back_btn_rect()
@@ -157,7 +142,7 @@ def run():
         dt = clock.tick(FPS)
         screen.fill(GOMOKU_BG)
 
-        # ── Top bar ───────────────────────────────────────────────────────────
+        # top bar
         pygame.draw.rect(screen, PANEL, (0, 0, W, TOP_BAR))
         draw_button(screen, "Back", btn_back, hover=mouse_over(btn_back))
 
@@ -175,7 +160,7 @@ def run():
                       f"{current}'s turn{diff_lbl}  |  arrows / wheel to scroll",
                       f_small, c, W//2 + 40, TOP_BAR//2)
 
-        # ── Grid ──────────────────────────────────────────────────────────────
+        # grid lines
         for row in range(view_rows + 1):
             y = TOP_BAR + row * CELL
             pygame.draw.line(screen, GOMOKU_LN, (0, y), (W, y))
@@ -183,7 +168,7 @@ def run():
             x = col * CELL
             pygame.draw.line(screen, GOMOKU_LN, (x, TOP_BAR), (x, H))
 
-        # ── Stones ────────────────────────────────────────────────────────────
+        # stones
         for (br, bc), player in board.items():
             sc = bc - cam_x
             sr = br - cam_y
@@ -194,7 +179,7 @@ def run():
                 pygame.draw.circle(screen, color, (cx, cy), CELL//2 - 3)
                 draw_text(screen, player, f_tiny, WHITE, cx, cy)
 
-        # ── Winning cells: pulsing glow + connecting line ─────────────────────
+        # winning glow
         if win_cells:
             alpha = int(110 + 80 * math.sin(pygame.time.get_ticks() * 0.006))
             screen_pts = []
@@ -215,7 +200,7 @@ def run():
 
         draw_text(screen, f"({cam_x},{cam_y})", f_tiny, MUTED, W-40, H-10)
 
-        # ── AI move ───────────────────────────────────────────────────────────
+        # ai
         if ai_plays and current == ai_symbol and not winner:
             if not ai_thinking:
                 ai_thinking = True
@@ -224,8 +209,7 @@ def run():
             delay = 250 if difficulty == "easy" else 550
             if ai_timer >= delay:
                 ai_thinking = False
-                r, c = _ai_move(board, ai_symbol, hu_symbol,
-                                difficulty, ROWS, COLS)
+                r, c = _ai_move(board, ai_symbol, hu_symbol, difficulty)
                 board[(r, c)] = ai_symbol
                 wc = _find_five(board, r, c, ai_symbol)
                 if wc:
@@ -234,7 +218,6 @@ def run():
                 else:
                     current = hu_symbol
 
-        # ── Events ────────────────────────────────────────────────────────────
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit(); sys.exit()
@@ -257,7 +240,7 @@ def run():
                     if not winner and human_turn and e.pos[1] >= TOP_BAR:
                         bc = e.pos[0] // CELL + cam_x
                         br = (e.pos[1] - TOP_BAR) // CELL + cam_y
-                        if (br, bc) not in board and 0 <= br < ROWS and 0 <= bc < COLS:
+                        if (br, bc) not in board and 0 <= br < BOARD_SIZE and 0 <= bc < BOARD_SIZE:
                             board[(br, bc)] = current
                             wc = _find_five(board, br, bc, current)
                             if wc:

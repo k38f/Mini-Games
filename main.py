@@ -1,18 +1,6 @@
 """
-main.py
-=======
-Entry point for Mini Games Collection.
-
-  - Shows the main menu
-  - Checks GitHub for a newer version in the background (non-blocking)
-  - Shows a fullscreen popup if an update is available
-  - Shows red notice if the check failed (no internet)
-
-Run:
-    python main.py
-
-Requirements:
-    pip install pygame
+main.py — entry point for Mini Games Collection.
+Run: python main.py
 """
 
 import sys
@@ -34,25 +22,16 @@ import game_gomoku
 import game_guess
 import game_snake
 
-# ==============================================================================
-#  VERSION
-# ==============================================================================
+# ---------------------------------------------------------
 
-CURRENT_VERSION = "1.1.0"   # keep in sync with the GitHub release tag (no 'v')
+CURRENT_VERSION = "1.1.0"
 
 GITHUB_API    = "https://api.github.com/repos/k38f/Mini-Games/releases/latest"
 RELEASES_PAGE = "https://github.com/k38f/Mini-Games/releases/latest"
 
 
-# ==============================================================================
-#  VERSION CHECK  (background thread)
-# ==============================================================================
-
 def _fetch_latest(result: list):
-    """
-    Fetch the latest release tag from GitHub.
-    Writes tag string (e.g. "1.2.0") or "ERROR" into result[0].
-    """
+    """Fetch the latest release tag from GitHub into result[0]."""
     try:
         req = urllib.request.Request(
             GITHUB_API,
@@ -67,10 +46,6 @@ def _fetch_latest(result: list):
 
 
 def _is_newer(latest: str, current: str) -> bool:
-    """
-    Compare version strings of any length.
-    Pads shorter string with zeros: "1.0" == "1.0.0", "1.1" > "1.0.9" etc.
-    """
     try:
         lp = [int(x) for x in latest.split(".")]
         cp = [int(x) for x in current.split(".")]
@@ -82,17 +57,9 @@ def _is_newer(latest: str, current: str) -> bool:
         return False
 
 
-# ==============================================================================
-#  UPDATE POPUP  (fullscreen overlay)
-# ==============================================================================
+# -- update popup ----------------------------------------
 
 def show_update_popup(latest_version: str):
-    """
-    Fullscreen popup shown when a newer version is found.
-    'Go to release' — opens browser on the releases page.
-    'OK — play on'  — closes popup and continues.
-    Shown only once per session.
-    """
     btn_w, btn_h = 200, 50
     btn_go = pygame.Rect(W // 2 - btn_w - 16, H // 2 + 40, btn_w, btn_h)
     btn_ok = pygame.Rect(W // 2 + 16,          H // 2 + 40, btn_w, btn_h)
@@ -124,16 +91,9 @@ def show_update_popup(latest_version: str):
         pygame.display.flip()
 
 
-# ==============================================================================
-#  MAIN MENU
-# ==============================================================================
+# -- main menu -------------------------------------------
 
 def main_menu(version_result: list, update_info: dict, popup_shown: list):
-    """
-    Show the game picker.
-    Polls the version check thread result on every frame so the status
-    updates immediately without waiting to return to main().
-    """
     entries = [
         ("1   Tic-Tac-Toe  (3x3)",     "ttt"),
         ("2   Gomoku  -  5 in a row",  "gomoku"),
@@ -150,7 +110,7 @@ def main_menu(version_result: list, update_info: dict, popup_shown: list):
     while True:
         clock.tick(FPS)
 
-        # ── Check thread result right here in the menu loop ───────────────────
+        # poll version check
         if update_info["state"] == "pending" and version_result[0] is not None:
             result = version_result[0]
             if result == "ERROR":
@@ -161,20 +121,16 @@ def main_menu(version_result: list, update_info: dict, popup_shown: list):
             else:
                 update_info["state"] = "ok"
 
-        # Show popup once when newer version is detected
         if update_info["state"] == "newer" and not popup_shown[0]:
             popup_shown[0] = True
             show_update_popup(update_info["latest"])
 
-        # ── Draw ──────────────────────────────────────────────────────────────
         screen.fill(BG)
         draw_text(screen, "Mini Games",  f_huge,  TEXT,  W // 2, 92)
         draw_text(screen, "pick a game", f_small, MUTED, W // 2, 152)
 
-        # Version badge — bottom-left
         draw_text(screen, f"v{CURRENT_VERSION}", f_tiny, MUTED, 38, H - 14)
 
-        # Status line — bottom-centre
         state = update_info["state"]
         if state == "pending":
             draw_text(screen, "Checking for updates...", f_tiny, MUTED, W // 2, H - 14)
@@ -199,16 +155,14 @@ def main_menu(version_result: list, update_info: dict, popup_shown: list):
         pygame.display.flip()
 
 
-# ==============================================================================
-#  ENTRY POINT
-# ==============================================================================
+# ---------------------------------------------------------
 
 def main():
     pygame.display.set_caption("Mini Games Collection")
 
-    version_result = [None]   # thread writes result here
+    version_result = [None]
     update_info    = {"state": "pending", "latest": ""}
-    popup_shown    = [False]  # mutable flag so menu loop can update it
+    popup_shown    = [False]
 
     checker = threading.Thread(
         target=_fetch_latest,

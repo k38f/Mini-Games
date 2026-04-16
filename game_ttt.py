@@ -1,7 +1,5 @@
 """
-game_ttt.py
-===========
-Game 1 — Tic-Tac-Toe (3×3).
+game_ttt.py — Tic-Tac-Toe (3×3).
 Two players or vs AI (easy / medium / hard).
 """
 
@@ -15,9 +13,6 @@ from shared import (
     draw_text, draw_button, mouse_over, back_btn_rect, mode_select,
 )
 
-# ==============================================================================
-#  WIN DETECTION
-# ==============================================================================
 
 def _check(board):
     """Return (symbol, winning_cells) or (None, None)."""
@@ -33,12 +28,8 @@ def _check(board):
     return None, None
 
 
-# ==============================================================================
-#  MINIMAX AI
-# ==============================================================================
-
+# 3×3 is small enough to solve exactly with minimax
 def _minimax(board, depth, is_max, ai_sym, hu_sym):
-    """Full minimax — 3×3 is small enough to solve exactly."""
     w, _ = _check(board)
     if w == ai_sym: return 10 - depth
     if w == hu_sym: return depth - 10
@@ -49,33 +40,29 @@ def _minimax(board, depth, is_max, ai_sym, hu_sym):
         best = -99
         for r, c in empty:
             board[r][c] = ai_sym
-            best = max(best, _minimax(board, depth+1, False, ai_sym, hu_sym))
+            best = max(best, _minimax(board, depth + 1, False, ai_sym, hu_sym))
             board[r][c] = None
         return best
     else:
         best = 99
         for r, c in empty:
             board[r][c] = hu_sym
-            best = min(best, _minimax(board, depth+1, True, ai_sym, hu_sym))
+            best = min(best, _minimax(board, depth + 1, True, ai_sym, hu_sym))
             board[r][c] = None
         return best
 
 
 def ai_move(board, ai_sym, hu_sym, difficulty):
-    """Return (row, col) for the AI to play."""
     empty = [(r, c) for r in range(3) for c in range(3) if board[r][c] is None]
     if not empty:
         return None
 
     if difficulty == "easy":
-        # Purely random — makes obvious mistakes
         return random.choice(empty)
 
     if difficulty == "medium" and random.random() < 0.40:
-        # 40 % of the time pick randomly to feel more human
         return random.choice(empty)
 
-    # Hard (and medium when not random) — perfect play via minimax
     best_score, best_move = -99, None
     for r, c in empty:
         board[r][c] = ai_sym
@@ -86,20 +73,16 @@ def ai_move(board, ai_sym, hu_sym, difficulty):
     return best_move
 
 
-# ==============================================================================
-#  MAIN GAME FUNCTION
-# ==============================================================================
+# ---------------------------------------------------------
 
 def run():
-    """Entry point — called from main.py."""
-
     mode = mode_select("Tic-Tac-Toe")
     if mode is None:
-        return   # player hit Back on the mode screen
+        return
 
     pvp_mode, difficulty = mode
     ai_plays  = (pvp_mode == "ai")
-    ai_symbol = "O"   # AI is always O; human is X
+    ai_symbol = "O"
     hu_symbol = "X"
 
     CELL = 132
@@ -122,7 +105,7 @@ def run():
         dt = clock.tick(FPS)
         screen.fill(BG)
 
-        # ── Status ────────────────────────────────────────────────────────────
+        # status text
         if winner:
             who = "AI" if (winner == ai_symbol and ai_plays) else winner
             draw_text(screen, f"{who} wins!", f_big,
@@ -136,14 +119,13 @@ def run():
             draw_text(screen, f"{lbl} turn  ({current})", f_big,
                       X_COL if current == "X" else O_COL, W//2, 32)
 
-        # ── Grid ──────────────────────────────────────────────────────────────
+        # grid
         for i in range(4):
             x = LEFT + i * CELL
             pygame.draw.line(screen, BORDER, (x, TOP), (x, TOP + CELL*3), 3)
             y = TOP + i * CELL
             pygame.draw.line(screen, BORDER, (LEFT, y), (LEFT + CELL*3, y), 3)
 
-        # ── Symbols ───────────────────────────────────────────────────────────
         for row in range(3):
             for col in range(3):
                 r   = cell_rect(row, col)
@@ -158,7 +140,7 @@ def run():
                     pygame.draw.circle(screen, O_COL, r.center,
                                        CELL//2 - pad + 4, 6)
 
-        # ── Winning highlight: glowing cells + line through them ───────────────
+        # winning highlight
         if win_line:
             for r, c in win_line:
                 hl = pygame.Surface((CELL, CELL), pygame.SRCALPHA)
@@ -168,13 +150,12 @@ def run():
             p2 = cell_rect(*win_line[2]).center
             pygame.draw.line(screen, WIN_GLOW, p1, p2, 5)
 
-        # ── Buttons ───────────────────────────────────────────────────────────
         draw_button(screen, "Back", btn_back, hover=mouse_over(btn_back))
         if winner or is_draw:
             draw_button(screen, "Play Again", btn_restart,
                         hover=mouse_over(btn_restart))
 
-        # ── AI move (small delay so it doesn't feel instant) ──────────────────
+        # AI move with a small delay so it doesn't feel instant
         if ai_plays and current == ai_symbol and not winner and not is_draw:
             if not ai_thinking:
                 ai_thinking = True
@@ -193,7 +174,6 @@ def run():
                         else:
                             current = hu_symbol
 
-        # ── Events ────────────────────────────────────────────────────────────
         for e in pygame.event.get():
             if e.type == pygame.QUIT:
                 pygame.quit(); sys.exit()

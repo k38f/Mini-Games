@@ -1,10 +1,4 @@
-"""
-game_guess.py
-=============
-Game 3 — Guess the Number.
-The computer picks a secret number from 1 to 100.
-Type your guess and press Enter. You get "too high" or "too low" hints.
-"""
+"""game_guess.py — Guess the Number (1-100)."""
 
 import pygame
 import sys
@@ -16,10 +10,10 @@ from shared import (
     draw_text, draw_button, mouse_over, back_btn_rect,
 )
 
+MAX_HISTORY = 6
+
 
 def run():
-    """Entry point — called from main.py."""
-
     def start():
         return {
             "secret":   random.randint(1, 100),
@@ -28,14 +22,13 @@ def run():
             "message":  "I picked a number from 1 to 100...",
             "msg_col":  TEXT,
             "won":      False,
-            "history":  [],   # list of (guess, hint) pairs
+            "history":  [],
         }
 
     state    = start()
     btn_back = back_btn_rect()
 
     def submit(st):
-        """Process the current typed input as a guess."""
         if not st["input"].isdigit():
             st["message"] = "Type a number!"; st["msg_col"] = X_COL; return
         g = int(st["input"]); st["input"] = ""
@@ -64,7 +57,6 @@ def run():
         draw_text(screen, state["message"],                f_med,   state["msg_col"],W//2, 110)
         draw_text(screen, f"Attempts: {state['attempts']}",f_small, MUTED,           W//2, 148)
 
-        # Input box
         input_rect = pygame.Rect(W//2 - 100, 178, 200, 46)
         pygame.draw.rect(screen, PANEL,  input_rect, border_radius=8)
         pygame.draw.rect(screen, ACCENT, input_rect, 2, border_radius=8)
@@ -74,13 +66,12 @@ def run():
         btn_guess = pygame.Rect(W//2 - 65, 240, 130, 42)
         draw_button(screen, "Guess!", btn_guess, hover=mouse_over(btn_guess))
 
-        # Last 6 guesses
         draw_text(screen, "History:", f_small, MUTED, W//2, 308)
-        for i, (g, hint) in enumerate(state["history"][-6:]):
+        for i, (g, hint) in enumerate(state["history"][-MAX_HISTORY:]):
             hcol = GOLD if hint == "Correct!" else (X_COL if hint == "Too high" else O_COL)
-            draw_text(screen, f"{g}  ->  {hint}", f_small, hcol, W//2, 332 + i*28)
+            draw_text(screen, f"{g}  ->  {hint}", f_small, hcol, W//2, 332 + i * 28)
 
-        btn_again = pygame.Rect(W//2 - 95, H-72, 190, 46)
+        btn_again = pygame.Rect(W//2 - 95, H - 72, 190, 46)
         if state["won"]:
             draw_button(screen, "Play Again", btn_again, hover=mouse_over(btn_again))
 
