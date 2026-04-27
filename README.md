@@ -19,16 +19,6 @@ A small collection of classic games in one window, built with **Python + Pygame*
 
 ![](screenshots/demo.gif)
 
-![](screenshots/1.png)
-![](screenshots/2.png)
-![](screenshots/3.png)
-![](screenshots/flappy.png)
-
-Resizable window — same code, different sizes:
-
-![](screenshots/snake_resized.png)
-![](screenshots/ttt_minimum_size.png)
-
 ---
 
 ## Requirements
