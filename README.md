@@ -7,6 +7,7 @@ A small collection of classic games in one window, built with **Python + Pygame*
 2  – Gomoku           (5 in a row on a big scrollable board — two players or vs AI)
 3  – Guess the Number (computer picks 1–100, you guess)
 4  – Snake            (classic; grid field, scaly visuals, speed increases as you eat)
+5  – Flappy Bird      (tap to flap, dodge the pipes)
 ```
 
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
@@ -16,9 +17,17 @@ A small collection of classic games in one window, built with **Python + Pygame*
 
 ## Screenshots
 
-![Menu](screenshots/1.png)
-![Snake](screenshots/2.png)
-![Gomoku](screenshots/3.png)
+![](screenshots/demo.gif)
+
+![](screenshots/1.png)
+![](screenshots/2.png)
+![](screenshots/3.png)
+![](screenshots/flappy.png)
+
+Resizable window — same code, different sizes:
+
+![](screenshots/snake_resized.png)
+![](screenshots/ttt_minimum_size.png)
 
 ---
 
@@ -37,6 +46,8 @@ pip install pygame
 python main.py
 ```
 
+The window is **resizable** — drag the corner to resize and every game adapts on the fly. Minimum size is 640×480.
+
 ---
 
 ## Controls
@@ -47,6 +58,7 @@ python main.py
 | Gomoku         | Mouse click to place · Arrow keys / scroll wheel to pan · **R** to restart after win |
 | Guess Number   | Type on keyboard · Enter or button to confirm                         |
 | Snake          | Arrow keys or WASD                                                    |
+| Flappy Bird    | Space / Up / W / mouse click to flap                                  |
 
 ---
 
@@ -77,16 +89,21 @@ To update — download the latest version from the [Releases](../../releases) pa
 
 ```
 main.py          — entry point, main menu, version check
-shared.py        — colours, fonts, and shared draw helpers
+shared.py        — colours, fonts, base Game class, helpers
 
 game_ttt.py      — Game 1: Tic-Tac-Toe
 game_gomoku.py   — Game 2: Gomoku (5 in a row)
 game_guess.py    — Game 3: Guess the Number
 game_snake.py    — Game 4: Snake
+game_flappy.py   — Game 5: Flappy Bird
 ```
+
+Every game subclasses `shared.Game`, which provides the main loop, QUIT
+handling, window-resize dispatch and the Back button. Each game only
+implements `handle_event`, `update`, `draw` and `on_resize`.
 
 ---
 
 ## License
 
-MIT — do whatever you want with it.
+MIT — see [LICENSE](LICENSE) file. Do whatever you want with it.
